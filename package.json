@@ -17,7 +17,7 @@
   },
   "repository": "https://github.com/faust64/redis-conductor",
   "scripts": {
-    "release": "npm login && git push -u origin master && npm publish",
+    "release": "(npm whoami | grep '^Not authed' >/dev/null && npm login) ; npm whoami | grep '^Not authed' >/dev/null && echo 'login to npm required' >&2 && exit 1 ; git push -u origin master && npm publish",
     "test": "make test"
   }
 }
