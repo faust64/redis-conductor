@@ -9,10 +9,12 @@ class conductor {
 	this._log = require('wraplog')(`${role}-advertise-neighbors`);
 	this._neighbors = [];
 	opts = opts || {};
+	let connOptions = { db: opts.dbId || '0' };
 	if (opts.idSuffix !== undefined) { this._idString = `${this._idString}:${opts.idSuffix}`; }
 	if (opts.intervalString === undefined) { opts.intervalString = '*/10 * * * * *'; }
 	if (opts.crashOnError === undefined) { opts.crashOnError = true; }
 	else if (opts.crashOnError === false && opts.exitOnError === undefined) { opts.exitOnError = true; }
+	if (opts.authPass !== undefined) { connOptions.auth_pass = opts.authPass; }
 	let self = this;
 
 	const handleError = (where, e) => {
@@ -24,8 +26,8 @@ class conductor {
 		    process.exit(1);
 		}
 	    };
-	this._publisher = redis.createClient(opts.port || 6379, opts.host || '127.0.0.1', { db: opts.dbId || '0' });
-	this._subscriber = redis.createClient(opts.port || 6379, opts.host || '127.0.0.1', { db: opts.dbId || '0' });
+	this._publisher = redis.createClient(opts.port || 6379, opts.host || '127.0.0.1', connOptions);
+	this._subscriber = redis.createClient(opts.port || 6379, opts.host || '127.0.0.1', connOptions);
 	this._publisher.on('error', (e) => handleError('publisher', e));
 	this._subscriber.on('error', (e) => handleError('subscriber', e));
 	this._subscriber.on('message', (chan, msg) => {
