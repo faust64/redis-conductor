@@ -1,4 +1,6 @@
 machine:
+  environment:
+    DEBUG: wraplog
   node:
     version: 6.9.1
   services:
