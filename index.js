@@ -4,12 +4,14 @@ const schedule = require('node-schedule');
 
 class conductor {
     constructor(role, opts) {
-	this._channel = 'advertise-neighbors-' + (role || 'standalone');
-	this._idString = os.hostname() + ':' + process.pid;
-	this._log = require('wraplog')(`${role}-advertise-neighbors`);
-	this._neighbors = [];
 	opts = opts || {};
 	let connOptions = { db: opts.dbId || '0' };
+	let logOpts = {};
+	if (process.env.DEBUG !== undefined) { logOpts.debug = true; }
+	this._channel = 'advertise-neighbors-' + (role || 'standalone');
+	this._idString = os.hostname() + ':' + process.pid;
+	this._log = require('wraplog')(`${role}-advertise-neighbors`, logOpts);
+	this._neighbors = [];
 	if (opts.idSuffix !== undefined) { this._idString = `${this._idString}:${opts.idSuffix}`; }
 	if (opts.intervalString === undefined) { opts.intervalString = '*/10 * * * * *'; }
 	if (opts.crashOnError === undefined) { opts.crashOnError = true; }
