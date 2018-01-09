@@ -43,4 +43,7 @@ unit-test:
 		./node_modules/.bin/mocha --exit $$_t || exit 1; \
 	    done
 
+release:
+	@@npm release
+
 test: check-test unit-test clean-common
