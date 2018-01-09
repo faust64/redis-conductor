@@ -1,8 +1,10 @@
 # Redis-Conductor
 
-Install with `npm install redis-conductor`
+ * Last tests against master on CircleCI: [![CircleCI](https://circleci.com/gh/faust64/redis-conductor.svg?style=svg)](https://circleci.com/gh/faust64/redis-conductor)
 
-Running several instances of the same process:
+ * Install with `npm install redis-conductor`
+
+ * Running several instances of the same process:
 
 ```
 const conductor = require('redis-conductor');
