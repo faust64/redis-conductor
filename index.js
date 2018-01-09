@@ -1,3 +1,5 @@
+'use strict';
+
 const os = require('os');
 const redis = require('redis');
 const schedule = require('node-schedule');
