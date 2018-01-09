@@ -44,6 +44,6 @@ unit-test:
 	    done
 
 release:
-	@@npm release
+	@@npm run release
 
 test: check-test unit-test clean-common
