@@ -1,0 +1,84 @@
+const os = require('os');
+const redis = require('redis');
+const schedule = require('node-schedule');
+
+class conductor {
+    constructor(role, opts) {
+	this._channel = 'advertise-neighbors-' + (role || 'standalone');
+	this._idString = os.hostname() + ':' + process.pid;
+	this._log = require('wraplog')(`${role}-advertise-neighbors`);
+	this._neighbors = [];
+	opts = opts || {};
+	if (opts.idSuffix !== undefined) { this._idString = `${this._idString}:${opts.idSuffix}`; }
+	if (opts.intervalString === undefined) { opts.intervalString = '*/10 * * * * *'; }
+	if (opts.crashOnError === undefined) { opts.crashOnError = true; }
+	else if (opts.crashOnError === false && opts.exitOnError === undefined) { opts.exitOnError = true; }
+	let self = this;
+
+	const handleError = (where, e) => {
+		let errStr = JSON.stringify(e || 'undefined error');
+		logger.error(`${where} caught error: ${errStr}`);
+		if (opts.crashOnError !== false) {
+		    throw new Error({ where: where, trace: e });
+		} else if (opts.exitOnError !== false) {
+		    process.exit(1);
+		}
+	    };
+	this._publisher = redis.createClient(opts.port || 6379, opts.host || '127.0.0.1', { db: opts.dbId || '0' });
+	this._subscriber = redis.createClient(opts.port || 6379, opts.host || '127.0.0.1', { db: opts.dbId || '0' });
+	this._publisher.on('error', (e) => handleError('publisher', e));
+	this._subscriber.on('error', (e) => handleError('subscriber', e));
+	this._subscriber.on('message', (chan, msg) => {
+		if (process.env.DEBUG) { self._log.info(`${self._idString} received message from ${msg}`); }
+		if (self._neighbors[msg] === undefined) {
+		    self._neighbors[msg] = 2;
+		} else { self._neighbors[msg]++; }
+	    });
+	this._subscriber.subscribe(this._channel);
+
+	this._advertiseNeighbors = schedule.scheduleJob(opts.intervalString, () => {
+		self._publisher.publish(self._channel, self._idString);
+		if (process.env.DEBUG) { self._log.info(`advertised neighbors from ${self._idString}`); }
+	    });
+
+	this._cleanupNeighbors = schedule.scheduleJob(opts.intervalString, () => {
+		if (self._neighbors[self._idString] !== undefined) {
+		    for (let key in self._neighbors) {
+			if (self._neighbors[key] > 0) {
+			    self._neighbors[key]--;
+			    if (process.env.DEBUG) { self._log.info(`${self._idString} knows of ${key} with score ${self._neighbors[key]}`); }
+			} else {
+			    delete self._neighbors[key];
+			    if (process.env.DEBUG) { self._log.info(`${self._idString} removing ${key} for no having checked in lately`); }
+			}
+		    }
+		}
+	    });
+    }
+
+    get itf() {
+	return {
+	    getId: () => { return this._idString; },
+	    getNeighbors: () => { return this._neighbors; },
+	    getOrderedNeighbors: () => {
+		    let ret = [];
+		    Object.keys(this._neighbors)
+			.sort().forEach((i, j) => {
+				ret.push(i);
+			    });
+		    return ret;
+		},
+	    isElectedMaster: () => {
+		    let ret = [];
+		    Object.keys(this._neighbors)
+			.sort().forEach((i, j) => { ret.push(i); });
+		    return ((ret[0] == this._idString));
+		},
+	    cancel: () => {
+		    this._advertiseNeighbors.cancel();
+		    this._cleanupNeighbors.cancel();
+		}
+	};
+    }
+}
+module.exports = (role, opts) => new conductor(role, opts).itf;

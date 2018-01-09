@@ -1,0 +1,23 @@
+{
+  "name": "redis-conductor",
+  "license": "BSD-3-Clause",
+  "version": "0.0.1",
+  "dependencies": {
+    "node-schedule": "1.2.5",
+    "redis": "^2.8.0",
+    "wraplog": "^0.0.2"
+  },
+  "devDependencies": {
+    "q": "latest",
+    "mocha": "4.1.0"
+  },
+  "description": "Redis-backed processes orchestrator",
+  "engines": {
+    "node": "6.9.1"
+  },
+  "repository": "https://github.com/faust64/redis-conductor",
+  "scripts": {
+    "release": "npm login && git push -u origin master && npm publish",
+    "test": "make test"
+  }
+}
