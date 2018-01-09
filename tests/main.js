@@ -1,3 +1,5 @@
+'use strict';
+
 const Q = require('q');
 const exec = require('child_process').exec;
 const execPromise = Q.nfbind(exec);
@@ -30,6 +32,7 @@ describe('test orchestrator', () => {
 			})
 		    .catch((e) => handleError(e));
 	    }).timeout(7000);
+
 	it('instantiates forks of distinct workers', () => {
 		let adv1 = conductor('test1', { intervalString: intervalString });
 		let adv2 = conductor('test2', { intervalString: intervalString });
