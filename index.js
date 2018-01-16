@@ -15,11 +15,11 @@ class conductor {
 	this._log = require('wraplog')(`${role}-advertise-neighbors`, logOpts);
 	this._neighbors = [];
 	if (opts.idSuffix !== undefined) { this._idString = `${this._idString}:${opts.idSuffix}`; }
-	opts.crashOnError = opts.crashOnError || true;
+	opts.crashOnError = opts.crashOnError !== false;
 	opts.host = opts.host || '127.0.0.1';
 	opts.intervalString = opts.intervalString || '*/10 * * * * *';
 	opts.port = opts.port || 6379;
-	if (opts.crashOnError === false || opts.crashOnError === 'false') { opts.exitOnError = true; }
+	if (opts.exitOnError === undefined) { opts.exitOnError = ! opts.crashOnError; }
 	if (opts.authPass !== undefined) { connOptions.auth_pass = opts.authPass; }
 	let self = this;
 
