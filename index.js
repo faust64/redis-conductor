@@ -15,23 +15,25 @@ class conductor {
 	this._log = require('wraplog')(`${role}-advertise-neighbors`, logOpts);
 	this._neighbors = [];
 	if (opts.idSuffix !== undefined) { this._idString = `${this._idString}:${opts.idSuffix}`; }
-	if (opts.intervalString === undefined) { opts.intervalString = '*/10 * * * * *'; }
-	if (opts.crashOnError === undefined) { opts.crashOnError = true; }
-	else if (opts.crashOnError === false && opts.exitOnError === undefined) { opts.exitOnError = true; }
+	opts.crashOnError = opts.crashOnError || true;
+	opts.host = opts.host || '127.0.0.1';
+	opts.intervalString = opts.intervalString || '*/10 * * * * *';
+	opts.port = opts.port || 6379;
+	if (opts.crashOnError === false || opts.crashOnError === 'false') { opts.exitOnError = true; }
 	if (opts.authPass !== undefined) { connOptions.auth_pass = opts.authPass; }
 	let self = this;
 
 	const handleError = (where, e) => {
 		let errStr = JSON.stringify(e || 'undefined error');
-		logger.error(`${where} caught error: ${errStr}`);
+		self._log.error(`${where} caught error: ${errStr}`);
 		if (opts.crashOnError !== false) {
 		    throw new Error({ where: where, trace: e });
 		} else if (opts.exitOnError !== false) {
 		    process.exit(1);
 		}
 	    };
-	this._publisher = redis.createClient(opts.port || 6379, opts.host || '127.0.0.1', connOptions);
-	this._subscriber = redis.createClient(opts.port || 6379, opts.host || '127.0.0.1', connOptions);
+	this._publisher = redis.createClient(opts.port, opts.host, connOptions);
+	this._subscriber = redis.createClient(opts.port, opts.host, connOptions);
 	this._publisher.on('error', (e) => handleError('publisher', e));
 	this._subscriber.on('error', (e) => handleError('subscriber', e));
 	this._subscriber.on('message', (chan, msg) => {
