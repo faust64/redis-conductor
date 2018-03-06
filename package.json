@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "q": "latest",
-    "mocha": "5.0.1"
+    "mocha": "5.0.2"
   },
   "description": "Redis-backed processes orchestrator",
   "engines": {
